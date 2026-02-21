@@ -8,127 +8,46 @@ on:
       manual-trigger:
         description: 'Manually trigger Renovate'
         default: ''
-
 jobs:
   update-app-version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
-      - name: Configure git
+      - name: Configure repo
         run: |
           git config --local user.email "githubaction@githubaction.com"
           git config --local user.name "github-action update-app-version"
 
-      - name: Get list of updated files by the last commit
+      - name: Get list of updated files by the last commit in this branch separated by space
         id: updated-files
         run: |
-          echo "files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')"
 
       - name: Run renovate-app-version.sh on updated files
-        id: rename
         run: |
-          set -e
-          chmod +x .github/workflows/renovate-app-version.sh
+          IFS=' ' read -ra files <<< "${{ steps.updated-files.outputs.files }}"
 
-          files="${{ steps.updated-files.outputs.files }}"
-          declare -a changed_apps=()
-
-          echo "Updated files: $files"
-
-          for file in $files; do
+          for file in "${files[@]}"; do
             if [[ $file == *"docker-compose.yml"* ]]; then
-              echo "Processing file: $file"
-
               app_name=$(echo $file | cut -d'/' -f 2)
               old_version=$(echo $file | cut -d'/' -f 3)
-              echo "App name: $app_name, old version: $old_version"
-
-              # 获取所有服务名
-              services=$(yq '.services | keys | .[]' "$file")
-              service=""
-              image_line=""
-
-              for s in $services; do
-                # 通过awk获取服务下的image行（包含注释）
-                image_line=$(awk "/services:/{flag=0} /^\s*$s:/{flag=1} flag && /^\s*image:/{print; exit}" "$file")
-                echo "Service $s image line: $image_line"
-                if [[ "$image_line" != *"[ignore]"* ]]; then
-                  service="$s"
-                  break
-                else
-                  echo "Skipping service $s due to [ignore]"
-                fi
-              done
-
-              if [[ -z "$service" ]]; then
-                echo "No valid service found in $file, skipping..."
-                continue
-              fi
-
-              # 提取image纯字符串，去除注释和多余空格
-              image=$(echo "$image_line" | sed -E 's/^\s*image:\s*([^ #]+).*/\1/')
-              echo "Selected service: $service"
-              echo "Extracted image: $image"
-
-              if [[ "$image" == *":"* ]]; then
-                new_version=$(cut -d ":" -f2- <<< "$image")
-                trimmed_version=${new_version/#"v"/}
-                echo "Parsed new version: $trimmed_version"
-              else
-                trimmed_version=""
-                echo "No version tag found in image."
-              fi
-
-              changed_apps+=("${app_name}:${old_version}:${trimmed_version}")
-              echo "Calling renovate-app-version.sh with: $app_name, $old_version, $trimmed_version"
-              .github/workflows/renovate-app-version.sh "$app_name" "$old_version" "$trimmed_version"
+              chmod +x .github/workflows/renovate-app-version.sh
+              .github/workflows/renovate-app-version.sh $app_name $old_version
             fi
           done
-
-          echo "All changed apps: ${changed_apps[*]}"
-          echo "apps=$(IFS=, ; echo "${changed_apps[*]}")" >> $GITHUB_OUTPUT
 
       - name: Commit & Push Changes
         run: |
-          set -e
-          IFS=',' read -r -a apps <<< "${{ steps.rename.outputs.apps }}"
-          for item in "${apps[@]}"; do
-            app_name=$(cut -d':' -f1 <<< "$item")
-            old_version=$(cut -d':' -f2 <<< "$item")
-            new_version=$(cut -d':' -f3 <<< "$item")
+          IFS=' ' read -ra files <<< "${{ steps.updated-files.outputs.files }}"
 
-            if [[ -n "$app_name" && -n "$new_version" ]]; then
-              git add "apps/$app_name/*"
-              git commit -m "📈将应用 $app_name 的版本从 $old_version 升级到 $new_version [skip ci]" --no-verify || echo "无内容可提交"
+          for file in "${files[@]}"; do
+            if [[ $file == *"docker-compose.yml"* ]]; then
+              app_name=$(echo $file | cut -d'/' -f 2)
+              git add "apps/$app_name/*" && git commit -m "Update app version [skip ci]" --no-verify && git push || true
             fi
           done
 
-          git push || echo "无内容可推送"
-
-      - name: Force merge PR after version bump
-        if: github.ref_name != 'main'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-          branch_name=$(git rev-parse --abbrev-ref HEAD)
-          echo "Current branch: $branch_name"
-
-          # 获取 PR 编号
-          pr_number=$(gh pr list --state open --head "$branch_name" --json number -q '.[0].number')
-          if [ -z "$pr_number" ]; then
-            echo "No PR found for branch $branch_name"
-            exit 0
-          fi
-
-          echo "Found PR #$pr_number, force merging..."
-
-          # 强制合并，不管 mergeable 状态
-          gh pr merge "$pr_number" --merge --delete-branch --admin
-
-
-                
