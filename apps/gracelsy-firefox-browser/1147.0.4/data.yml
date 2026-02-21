@@ -1,16 +1,5 @@
 additionalProperties:
   formFields:
-    - default: 40089
-      edit: true
-      envKey: PANEL_APP_PORT_HTTP
-      labelEn: HTTP Port
-      labelZh: HTTP端口
-      label:
-        en: HTTP Port
-        zh: HTTP端口
-      required: true
-      rule: paramPort
-      type: number
     - default: 40090
       edit: true
       envKey: PANEL_APP_PORT_HTTPS
@@ -22,7 +11,7 @@ additionalProperties:
       required: true
       rule: paramPort
       type: number
-    - default: "user"
+    - default: 
       edit: true
       envKey: HTTP_USER
       labelEn: Access User
@@ -30,9 +19,9 @@ additionalProperties:
       label:
         en: Access User
         zh: 访问用户
-      required: true
+      required: false
       type: text
-    - default: Password
+    - default: 
       edit: true
       envKey: HTTP_PWD
       labelEn: Access Password
@@ -41,7 +30,7 @@ additionalProperties:
         en: Access Password
         zh: 访问密码
       random: false
-      required: true
+      required: false
       rule: paramComplexity
       type: password
     - default: "512m"
