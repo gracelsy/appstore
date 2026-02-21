@@ -8,6 +8,10 @@ on:
       manual-trigger:
         description: 'Manually trigger Renovate'
         default: ''
+
+permissions:
+  contents: write
+
 jobs:
   update-app-version:
     runs-on: ubuntu-latest
