@@ -22,7 +22,7 @@
 
 ### 📥 国内同步脚本：
 
-镜像仓库地址：https://cnb.cool/gracelsy/appstore
+镜像仓库地址：https://cnb.cool/gracelsy/1panel-appstore
 
 使用github action保持同步更新。
 
@@ -33,7 +33,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 MATCH_PATTERN="gracelsy-*"
-GIT_REPO="https://cnb.cool/gracelsy/appstore"
+GIT_REPO="https://cnb.cool/gracelsy/1panel-appstore"
 TMP_DIR="/opt/1panel/resource/apps/local/appstore-main"
 LOCAL_APPS_DIR="/opt/1panel/resource/apps/local"
 
@@ -72,7 +72,7 @@ echo "✅ Sync completed."
 🌍 国外环境请替换为 GitHub 仓库：
 
 ```bash
-GIT_REPO="https://github.com/gracelsy/appstore"
+GIT_REPO="https://github.com/gracelsy/1panel-appstore"
 ```
 
 ------
