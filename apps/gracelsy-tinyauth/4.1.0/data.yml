@@ -9,7 +9,7 @@ additionalProperties:
       rule: paramPort
       type: number
 
-    - default: "https://auth.domain.com"
+    - default: "https://auth.example.com"
       edit: true
       envKey: PANEL_TINYAUTH_APP_URL
       labelEn: App URL
@@ -17,7 +17,7 @@ additionalProperties:
       required: true
       type: text
 
-    - default: "https://gh.zsir.us.kg/https://github.com/gracelsy/picx-images-hosting/raw/master/%E8%93%9D%E7%9C%BC%E7%9D%9B%E7%9A%84%E7%8C%AB%E5%A5%B3%E5%AD%A9.6bh7lxgqfc.webp"
+    - default: ""
       edit: true
       envKey: BACKGROUND_IMAGE
       labelEn: BACKGROUND_IMAGE
@@ -25,11 +25,19 @@ additionalProperties:
       required: false
       type: text
 
+    - default: ""
+      edit: true
+      envKey: NAME
+      labelEn: Name of the OAuth provider
+      labelZh: OAuth提供者的名称
+      required: false
+      type: text
+
     - default: "github"
       edit: true
       envKey: OAUTH
-      labelEn: Auth提供商
-      labelZh: Auth提供商（默认github）
+      labelEn: Auth提供商ID
+      labelZh: Auth提供商ID（仅填写一个，如果为github或google，后面参数仅需要填写client_id和client_secret）
       required: false
       type: text
 
@@ -47,14 +55,6 @@ additionalProperties:
       envKey: CLIENT_SECRET
       labelEn: CLIENT_SECRET
       labelZh: 客户端密钥 （CLIENT_SECRET）
-      required: false
-      type: text
-
-    - default: ""
-      edit: true
-      envKey: NAME
-      labelEn: Name of the OAuth provider
-      labelZh: OAuth提供者的名称
       required: false
       type: text
 
